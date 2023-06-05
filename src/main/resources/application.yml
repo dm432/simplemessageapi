@@ -1,0 +1,9 @@
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/postgres
+    username: messageapi
+    password:
+
+jwt:
+  secretKey:  # secret key (with at least 256 bits)
+  validityDuration: 900000 # validity of the key in milliseconds
