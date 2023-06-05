@@ -29,7 +29,6 @@ class JWTTokenProvider {
 
     @PostConstruct
     fun init() {
-        println(jwtProperties.validityDuration)
         val secret = Base64.getEncoder().encodeToString(jwtProperties.secretKey.toByteArray())
         secretKey = Keys.hmacShaKeyFor(secret.toByteArray(StandardCharsets.UTF_8))
     }

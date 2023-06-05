@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    container_name: simplemessageapi
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_R2DBC_URL=r2dbc:postgresql://postgres:5432/messageapi
+    depends_on:
+      - postgres
+  postgres:
+    image: 'postgres:latest'
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=messageapi
+      - POSTGRES_USER=messageapi
+      - POSTGRES_PASSWORD=messageapi
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
