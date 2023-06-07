@@ -33,6 +33,9 @@ class SecurityConfig {
         .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
         .authorizeExchange {
             it.pathMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
+            it.pathMatchers("/api-docs/**").permitAll()
+            it.pathMatchers("/api-docs.html").permitAll()
+            it.pathMatchers("/webjars/**").permitAll()
             it.anyExchange().authenticated()
         }
         .addFilterAt(JWTTokenAuthenticationFilter(tokenProvider), SecurityWebFiltersOrder.HTTP_BASIC)

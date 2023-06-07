@@ -7,3 +7,9 @@ spring:
 jwt:
   secretKey: 3677397A24432646294A404E635266556A586E5A7234753778214125442A472D4B6150645367566B59703373357638792F423F4528482B4D6251655468576D5A # secret key (with at least 256 bits)
   validityDuration: 900000 # validity of the key in milliseconds
+
+springdoc:
+  swagger-ui:
+    path: /api-docs.html
+  api-docs:
+    path: /api-docs

@@ -5,6 +5,8 @@ import com.danielmaile.simplemessageapi.model.User
 import com.danielmaile.simplemessageapi.repository.UserRepository
 import com.danielmaile.simplemessageapi.security.JWTTokenProvider
 import com.danielmaile.simplemessageapi.web.model.AuthRequest
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -20,6 +22,7 @@ import reactor.core.publisher.Mono
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Authentication")
 class AuthController {
 
     @Autowired
@@ -34,6 +37,9 @@ class AuthController {
     @Autowired
     private lateinit var userRepo: UserRepository
 
+    @Operation(
+        summary = "Login to an existing account."
+    )
     @PostMapping("/login")
     fun login(@RequestBody authRequest: Mono<AuthRequest>) =
         authRequest
@@ -54,6 +60,9 @@ class AuthController {
                 ResponseEntity(tokenBody, httpHeaders, HttpStatus.OK)
             }
 
+    @Operation(
+        summary = "Create a new user account."
+    )
     @PostMapping
     fun createAccount(@RequestBody authRequest: Mono<AuthRequest>) =
         authRequest
