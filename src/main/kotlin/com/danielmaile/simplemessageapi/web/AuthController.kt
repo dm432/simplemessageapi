@@ -1,5 +1,6 @@
 package com.danielmaile.simplemessageapi.web
 
+import com.danielmaile.simplemessageapi.model.Role
 import com.danielmaile.simplemessageapi.model.User
 import com.danielmaile.simplemessageapi.repository.UserRepository
 import com.danielmaile.simplemessageapi.security.JWTTokenProvider
@@ -34,8 +35,8 @@ class AuthController {
     private lateinit var userRepo: UserRepository
 
     @PostMapping("/login")
-    fun login(@RequestBody authRequest: Mono<AuthRequest>): Mono<ResponseEntity<Map<String, String>>> {
-        return authRequest
+    fun login(@RequestBody authRequest: Mono<AuthRequest>) =
+        authRequest
             .flatMap { request ->
                 authenticationManager
                     .authenticate(
@@ -52,18 +53,16 @@ class AuthController {
                 val tokenBody = mapOf("access_token" to jwt)
                 ResponseEntity(tokenBody, httpHeaders, HttpStatus.OK)
             }
-    }
 
     @PostMapping
-    fun createAccount(@RequestBody authRequest: Mono<AuthRequest>): Mono<User> {
-        return authRequest
+    fun createAccount(@RequestBody authRequest: Mono<AuthRequest>) =
+        authRequest
             .flatMap { request ->
                 val user = User(
                     username = request.username,
                     password = passwordEncoder.encode(request.password),
-                    roles = listOf("ROLE_USER")
+                    roles = listOf(Role.ROLE_USER)
                 )
                 userRepo.save(user)
             }
-    }
 }

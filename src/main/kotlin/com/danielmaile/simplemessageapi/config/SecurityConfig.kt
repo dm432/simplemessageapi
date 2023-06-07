@@ -26,29 +26,27 @@ class SecurityConfig {
         http: ServerHttpSecurity,
         tokenProvider: JWTTokenProvider,
         reactiveAuthenticationManager: ReactiveAuthenticationManager
-    ): SecurityWebFilterChain {
-        return http
-            .csrf { it.disable() }
-            .httpBasic { it.disable() }
-            .authenticationManager(reactiveAuthenticationManager)
-            .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
-            .authorizeExchange {
-                it.pathMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
-                it.anyExchange().authenticated()
-            }
-            .addFilterAt(JWTTokenAuthenticationFilter(tokenProvider), SecurityWebFiltersOrder.HTTP_BASIC)
-            .build()
-    }
+    ): SecurityWebFilterChain = http
+        .csrf { it.disable() }
+        .httpBasic { it.disable() }
+        .authenticationManager(reactiveAuthenticationManager)
+        .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
+        .authorizeExchange {
+            it.pathMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
+            it.anyExchange().authenticated()
+        }
+        .addFilterAt(JWTTokenAuthenticationFilter(tokenProvider), SecurityWebFiltersOrder.HTTP_BASIC)
+        .build()
 
     @Bean
-    fun userDetailsService(users: UserRepository): ReactiveUserDetailsService {
-        return ReactiveUserDetailsService { username: String ->
+    fun userDetailsService(users: UserRepository) =
+        ReactiveUserDetailsService { username: String ->
             users.findUserByUsername(username)
                 .map { user ->
                     User
                         .withUsername(user.username)
                         .password(user.password)
-                        .authorities(*user.roles.toTypedArray())
+                        .authorities(user.roles)
                         .accountExpired(!user.active)
                         .credentialsExpired(!user.active)
                         .disabled(!user.active)
@@ -56,7 +54,6 @@ class SecurityConfig {
                         .build()
                 }
         }
-    }
 
     @Bean
     fun reactiveAuthenticationManager(
