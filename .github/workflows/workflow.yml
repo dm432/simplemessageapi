@@ -1,0 +1,24 @@
+name: SimpleMessageAPI CI
+
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Start Postgres
+        run: docker compose up -d postgres
+
+      - name: Run Tests
+        run: ./gradlew test
