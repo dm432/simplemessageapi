@@ -3,6 +3,7 @@ package com.danielmaile.simplemessageapi.config
 import com.danielmaile.simplemessageapi.model.Role
 import com.danielmaile.simplemessageapi.model.User
 import com.danielmaile.simplemessageapi.repository.UserRepository
+import com.danielmaile.simplemessageapi.security.AUTHORITIES_KEY
 import com.danielmaile.simplemessageapi.security.JWTProperties
 import com.danielmaile.simplemessageapi.security.JWTTokenProvider
 import com.ninjasquad.springmockk.MockkBean
@@ -219,7 +220,7 @@ class SecurityConfigTest {
             val secretKey = Keys.hmacShaKeyFor(secret.toByteArray(StandardCharsets.UTF_8))
 
             if (authorities.isEmpty()) {
-                claims["roles"] = authorities.stream()
+                claims[AUTHORITIES_KEY] = authorities.stream()
                     .map { it.authority }
                     .collect(Collectors.joining(","))
             }

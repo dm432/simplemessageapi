@@ -17,7 +17,7 @@ import java.util.Date
 import java.util.stream.Collectors
 import javax.crypto.SecretKey
 
-private const val AUTHORITIES_KEY = "roles"
+const val AUTHORITIES_KEY = "roles"
 
 @Component
 class JWTTokenProvider {
@@ -38,7 +38,7 @@ class JWTTokenProvider {
         val authorities = authentication.authorities
         val claims = Jwts.claims().setSubject(username)
 
-        if (authorities.isEmpty()) {
+        if (!authorities.isEmpty()) {
             claims[AUTHORITIES_KEY] = authorities.stream()
                 .map { it.authority }
                 .collect(Collectors.joining(","))
