@@ -11,7 +11,7 @@ class User (
     var id: Long? = null,
     val username: String,
     @JsonIgnore
-    val password: String,
+    val password: String = "",
     @JsonIgnore
     val active: Boolean = true,
     val roles: List<Role> = listOf()

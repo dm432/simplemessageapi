@@ -30,9 +30,14 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.1.0")
 	runtimeOnly("org.postgresql:postgresql")
 	runtimeOnly("org.postgresql:r2dbc-postgresql")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-test") {
+		exclude(module = "mockito-core")
+	}
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("io.mockk:mockk:1.13.5")
+    testImplementation("io.strikt:strikt-core:0.34.1")
+	testImplementation("com.ninja-squad:springmockk:4.0.2")
 }
 
 tasks.withType<KotlinCompile> {

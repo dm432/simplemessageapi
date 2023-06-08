@@ -50,7 +50,8 @@ class JWTTokenProvider {
         return Jwts
             .builder()
             .setClaims(claims)
-            .setIssuedAt(validity)
+            .setIssuedAt(now)
+            .setExpiration(validity)
             .signWith(secretKey, SignatureAlgorithm.HS256)
             .compact()
     }
