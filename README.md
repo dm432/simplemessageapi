@@ -19,7 +19,7 @@ If you want to start the api without docker you need to first start your databas
 To start the api without docker, just run `./gradlew bootRun`.
 
 ## 🔧 Getting started
-The application comes with api docs. You can access the swagger ui at [http://localhost:8080/api-docs.html](http://localhost:8080/api-docs.html).
+The application comes with api docs. You can access swagger ui at [http://localhost:8080/api-docs.html](http://localhost:8080/api-docs.html).
 Every api endpoint is listed and explained there.
 
 To start, you first need to create a new user account. To achieve this, just send a post request including the username and password to the `/auth` endpoint:
@@ -45,7 +45,7 @@ curl -X 'POST' \
   "password": "supersecurepassword"
 }'
 ```
-You will get you jwt access token as a response. Use it to access all the other protected endpoints.j
+You will get your jwt access token as a response. Use it to access all the other protected endpoints.
 For example, to retrieve information about the current user, use:
 ```bash
 curl -X 'GET' \
