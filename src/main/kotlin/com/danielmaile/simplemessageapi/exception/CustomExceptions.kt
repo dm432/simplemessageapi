@@ -10,3 +10,7 @@ open class CustomException(
 class UsernameAlreadyTakenException : CustomException("A user with that username already exists.", HttpStatus.CONFLICT)
 
 class InvalidCredentialsException : CustomException("Invalid username or password.", HttpStatus.BAD_REQUEST)
+
+class UsernameNotFoundException(
+    val username: String
+) : CustomException("The user $username was not found.", HttpStatus.BAD_REQUEST)

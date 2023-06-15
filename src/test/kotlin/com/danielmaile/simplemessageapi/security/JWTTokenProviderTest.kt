@@ -3,6 +3,7 @@ package com.danielmaile.simplemessageapi.security
 import com.danielmaile.simplemessageapi.config.ApplicationConfig
 import com.danielmaile.simplemessageapi.config.SecurityConfig
 import com.danielmaile.simplemessageapi.model.Role
+import com.danielmaile.simplemessageapi.repository.MessageRepository
 import com.danielmaile.simplemessageapi.repository.UserRepository
 import com.ninjasquad.springmockk.MockkBean
 import io.jsonwebtoken.Claims
@@ -54,6 +55,9 @@ class JWTTokenProviderTest {
 
     @MockkBean
     private lateinit var userRepository: UserRepository
+
+    @MockkBean
+    private lateinit var messageRepo: MessageRepository
 
     @Test
     fun `getAuthentication - extracts subject claim correctly`() {
