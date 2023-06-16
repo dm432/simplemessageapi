@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.http.MediaType
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import reactor.core.publisher.Mono
 import strikt.api.expectThat
@@ -35,6 +36,12 @@ import strikt.assertions.isNotNull
 @Import(
     ApplicationConfig::class,
     SecurityConfig::class
+)
+@TestPropertySource(
+    locations = [
+        "classpath:properties.yaml"
+    ]
+
 )
 class AuthControllerTest {
 

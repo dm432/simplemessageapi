@@ -24,6 +24,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import reactor.core.publisher.Mono
 import strikt.api.expect
@@ -46,6 +47,12 @@ import java.util.stream.Collectors
     JWTProperties::class
 )
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(
+    locations = [
+        "classpath:properties.yaml"
+    ]
+
+)
 class SecurityConfigTest {
 
     @Autowired

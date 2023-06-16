@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import reactor.core.publisher.Mono
 import strikt.api.expectThat
@@ -34,6 +35,12 @@ import strikt.assertions.isNotNull
     SecurityConfig::class,
     JWTTokenProvider::class,
     JWTProperties::class
+)
+@TestPropertySource(
+    locations = [
+        "classpath:properties.yaml"
+    ]
+
 )
 class CurrentUserControllerTest {
 

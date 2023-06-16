@@ -28,6 +28,7 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
     implementation("io.springfox:springfox-swagger-ui:3.0.0")
     implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.1.0")
+	implementation("org.flywaydb:flyway-core:9.16.0")
 	runtimeOnly("org.postgresql:postgresql")
 	runtimeOnly("org.postgresql:r2dbc-postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {

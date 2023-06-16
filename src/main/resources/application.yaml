@@ -1,12 +1,16 @@
 spring:
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/messageapi
-    username: messageapi
-    password: messageapi
+    url: r2dbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  flyway:
+    url: jdbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}
+    user: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
 
 jwt:
-  secretKey: 3677397A24432646294A404E635266556A586E5A7234753778214125442A472D4B6150645367566B59703373357638792F423F4528482B4D6251655468576D5A # secret key (with at least 256 bits)
-  validityDuration: 900000 # validity of the key in milliseconds
+  secretKey: ${JWT_SECRET_KEY}
+  validityDuration: ${JWT_VALIDITY_DURATION}
 
 springdoc:
   swagger-ui:

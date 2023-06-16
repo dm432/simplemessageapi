@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
+import org.springframework.test.context.TestPropertySource
 import strikt.api.expectThat
 import strikt.api.expectThrows
 import strikt.assertions.any
@@ -35,6 +36,12 @@ import java.util.Base64
     JWTTokenProvider::class,
     SecurityConfig::class,
     ApplicationConfig::class
+)
+@TestPropertySource(
+    locations = [
+        "classpath:properties.yaml"
+    ]
+
 )
 class JWTTokenProviderTest {
 

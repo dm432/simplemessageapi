@@ -1,13 +1,18 @@
 version: '3'
 
 services:
-  app:
+  simplemessageapi:
     build: .
     container_name: simplemessageapi
     ports:
       - "8080:8080"
     environment:
-      - SPRING_R2DBC_URL=r2dbc:postgresql://postgres:5432/messageapi
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=messageapidb
+      - POSTGRES_USER=messageapi
+      - POSTGRES_PASSWORD=password
+      - JWT_SECRET_KEY=3677397A24432646294A404E635266556A586E5A7234753778214125442A472D4B6150645367566B59703373357638792F423F4528482B4D6251655468576D5A
+      - JWT_VALIDITY_DURATION=90000
     depends_on:
       - postgres
   postgres:
@@ -16,8 +21,6 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DB=messageapi
+      - POSTGRES_DB=messageapidb
       - POSTGRES_USER=messageapi
-      - POSTGRES_PASSWORD=messageapi
-    volumes:
-      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - POSTGRES_PASSWORD=password

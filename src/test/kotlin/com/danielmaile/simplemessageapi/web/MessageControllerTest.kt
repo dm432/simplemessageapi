@@ -26,6 +26,7 @@ import org.springframework.http.MediaType
 import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import reactor.core.publisher.Mono
 import strikt.api.expectThat
@@ -45,6 +46,12 @@ typealias MessageDTO = com.danielmaile.simplemessageapi.web.model.Message
     SecurityConfig::class,
     JWTTokenProvider::class,
     JWTProperties::class
+)
+@TestPropertySource(
+    locations = [
+        "classpath:properties.yaml"
+    ]
+
 )
 class MessageControllerTest {
 

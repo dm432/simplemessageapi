@@ -1,0 +1,132 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simplemessageapi
+  labels:
+    name: simplemessageapi
+spec:
+  selector:
+    app: simplemessageapi
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - mountPath: data/db
+              name: storage
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: simplemessageapi
+                  key: postgres_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: simplemessageapi
+                  key: postgres_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: simplemessageapi
+                  key: postgres_password
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simplemessageapi
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: simplemessageapi
+  template:
+    metadata:
+      labels:
+        app: simplemessageapi
+    spec:
+      containers:
+        - name: simplemessageapi
+          image: simplemessageapi
+          ports:
+            - containerPort: 8080
+          imagePullPolicy: Never
+          env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: simplemessageapi
+                  key: postgres_host
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: simplemessageapi
+                  key: postgres_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: simplemessageapi
+                  key: postgres_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: simplemessageapi
+                  key: postgres_password
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: simplemessageapi
+                  key: jwt_secret_key
+            - name: JWT_VALIDITY_DURATION
+              valueFrom:
+                configMapKeyRef:
+                  name: simplemessageapi
+                  key: jwt_validity_duration

@@ -1,26 +1,56 @@
 # Simple Message API
 [![Code license (GPL v3.0)](https://img.shields.io/badge/code%20license-GPL%20v3.0-green.svg?style=flat-square)](https://github.com/TheRealKabo/MPP/blob/master/LICENSE)
 
-**Please note: This project is still in very early development and many features are still missing :(**
+**Please note: This project is still in very early development and many features are missing :(**
 
-This is a simple reactive api that can be used as a backend for a messenger. The api is build using spring boot web flux
-and a postgres database. For authentication jwt bearer tokens are used. The whole project can be run in a docker container. See below for more information.
+This is a simple reactive api that can be used as a backend for a messenger. The api is build using SpringBoot WebFlux
+and a Postgres database. For authentication bearer JWTs are used. The whole project can be run inside a Kubernetes cluster. See below for more information.
 
-## 🔨 How to use 
+## 🔨 Start the application 
 
-**Step 1**: Clone the repo by using `git clone`
+### Method 1 (Kubernetes Cluster):
+#### Prerequisites:
+- [Docker Engine](https://github.com/moby/moby) 
+- A [Kubernetes](https://github.com/kubernetes/kubernetes) Cluster (or [Minikube](https://github.com/kubernetes/minikube))
+- Kubernetes command-line tool (kubectl)
 
-**Step 2** (Optional but **highly recommended**): Change the database credentials and the jwt secret key in the 
-`application.yml` file located at `src/main/resources`. Be sure to use a secret key with at least 256 bits.
-If you want to use docker, you need to change the database credentials in the `docker-compose.yml` accordingly.
+#### Steps:
+- **Step 1**: Clone the repo by using `git clone`.
+- **Step 2**: Change the secrets (located at `k8s/secret.yaml`) and (optional) the config (located at `k8s/config.yaml`). 
+Keep in mind that the secrets need to be base64 encoded. You can do this by using `echo -n 'text_to_encode' | base64` for example.
+The JWT secret key needs to be at least 256 bits strong.
+- **Step 3** (only required if you are using Minikube): By default, Minikube cannot access locally built images within Docker. 
+Therefore, you need to the environment variable for the Docker daemon to run inside the Minikube cluster by using `eval $(minikube docker-env)` or, if you are using Windows: `minikube docker-env | Invoke-Expression`.
+To access the API, you need to expose the load balancer service. To do this, just open another shell and run `minikube tunnel` there.
+- **Step 4**: Build the Docker image of the application by using `docker build -t simplemessageapi .`.
+- **Step 5**: Apply all templates to your cluster by running `kubectl apply -f k8s/config.yaml`, `kubectl apply -f k8s/secret.yaml` and `kubectl apply -f k8s/deployment.yaml`.
 
-**Step 3**: To start the database, api and api-docs in a docker container just run `docker compose up` in the root directory of the repo.
-If you want to start the api without docker you need to first start your database by either running `docker compose up postgres` or using your own postgres database.
-To start the api without docker, just run `./gradlew bootRun`.
+The API should now be running and accessible at http://YOUR_EXTERNAL_IP:8080. Note: You can get the external ip of your cluster with `kubectl get services`.
+ 
+### Method 2 (Development Setup):
+#### Prerequisites:
+- JDK 17 LTS 
+- [Docker Engine](https://github.com/moby/moby) and [Docker Compose](https://github.com/docker/compose)
 
-## 🔧 Getting started
-The application comes with api docs. You can access swagger ui at [http://localhost:8080/api-docs.html](http://localhost:8080/api-docs.html).
-Every api endpoint is listed and explained there.
+#### Method 2a (Run the database and the application in Docker containers):
+- **Step 1**: Clone the repo by using `git clone`.
+- **Step 2**: Change the secrets and the configuration for the postgres database and the application in the `docker-compose.yml` file.
+Note that the JWT secret key needs to be at least 256 bits strong.
+- **Step 3**: Start the containers by using `docker compose up`.
+
+
+#### Method 2b (Run only the database inside the Docker container and start the application with Gradle):
+- **Step 1**: Clone the repo by using `git clone`.
+- **Step 2**: Change the secrets and the configuration for the postgres database in the `docker-compose.yml` file.
+- **Step 3**: Start the database by running `docker compose up postgres`.
+- **Step 4**: Start the application with `POSTGRES_HOST=value POSTGRES_DB=value POSTGRES_USER=value POSTGRES_PASSWORD=value JWT_SECRET_KEY=value JWT_VALIDITY_DURATION=value ./gradlew bootRun`.
+Make sure that you replace all environment variable values with the actual values that you defined in the `docker-compose.yml` file. Note that the JWT secret key needs to be at least 256 bits strong. 
+
+If you have completed one of these methods, the API should be running and accessible at [http://localhost:8080](http://localhost:8080).
+
+## 🔧 How to use
+The application comes with api-docs. You can access Swagger UI at [http://localhost:8080/api-docs.html](http://localhost:8080/api-docs.html) or (depending on your run method) at http://YOUR_EXTERNAL_IP:8080/api-docs.html .
+Every API endpoint is listed and explained there.
 
 To start, you first need to create a new user account. To achieve this, just send a post request including the username and password to the `/auth` endpoint:
 ```bash
@@ -34,7 +64,7 @@ curl -X 'POST' \
 }'
 ```
 
-The just use the `/auth/login` endpoint to login to your new account:
+The just use the `/auth/login` endpoint to log in to your new account:
 ```bash
 curl -X 'POST' \
   'http://localhost:8080/api/v1/auth/login' \
@@ -45,7 +75,7 @@ curl -X 'POST' \
   "password": "supersecurepassword"
 }'
 ```
-You will get your jwt access token as a response. Use it to access all the other protected endpoints.
+You will get your JWT as a response. Use it to access all the other protected endpoints.
 For example, to retrieve information about the current user, use:
 ```bash
 curl -X 'GET' \
