@@ -19,11 +19,8 @@ and a Postgres database. For authentication bearer JWTs are used. The whole proj
 - **Step 2**: Change the secrets (located at `k8s/secret.yaml`) and (optional) the config (located at `k8s/config.yaml`). 
 Keep in mind that the secrets need to be base64 encoded. You can do this by using `echo -n 'text_to_encode' | base64` for example.
 The JWT secret key needs to be at least 256 bits strong.
-- **Step 3** (only required if you are using Minikube): By default, Minikube cannot access locally built images within Docker. 
-Therefore, you need to the environment variable for the Docker daemon to run inside the Minikube cluster by using `eval $(minikube docker-env)` or, if you are using Windows: `minikube docker-env | Invoke-Expression`.
-To access the API, you need to expose the load balancer service. To do this, just open another shell and run `minikube tunnel` there.
-- **Step 4**: Build the Docker image of the application by using `docker build -t simplemessageapi .`.
-- **Step 5**: Apply all templates to your cluster by running `kubectl apply -f k8s/config.yaml`, `kubectl apply -f k8s/secret.yaml` and `kubectl apply -f k8s/deployment.yaml`.
+- **Step 3** (only required if you are using Minikube): To access the API, you need to expose the load balancer service. To do this, just open another shell and run `minikube tunnel` there.
+- **Step 4**: Apply all templates to your cluster by running `kubectl apply -f k8s/config.yaml`, `kubectl apply -f k8s/secret.yaml` and `kubectl apply -f k8s/deployment.yaml`.
 
 The API should now be running and accessible at http://YOUR_EXTERNAL_IP:8080. Note: You can get the external ip of your cluster with `kubectl get services`.
  

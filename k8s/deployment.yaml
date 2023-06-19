@@ -95,10 +95,10 @@ spec:
     spec:
       containers:
         - name: simplemessageapi
-          image: simplemessageapi
+          image: dm432/simplemessageapi
           ports:
             - containerPort: 8080
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           env:
             - name: POSTGRES_HOST
               valueFrom:
