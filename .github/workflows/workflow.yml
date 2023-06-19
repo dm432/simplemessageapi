@@ -2,20 +2,25 @@ name: SimpleMessageAPI CI
 
 on:
   push:
+    branches:
+      - master
 
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up JDK
-        uses: actions/setup-java@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
         with:
-          java-version: 17
-          distribution: 'temurin'
+          username: ${{secrets.DOCKERHUB_USERNAME }}
+          password: ${{secrets.DOCKERHUB_TOKEN }}
 
-      - name: Run Tests
-        run: ./gradlew test
+      - name: Build Docker Image
+        run: docker build . --file Dockerfile --tag ${{secrets.DOCKERHUB_USERNAME}}/simplemessageapi
+
+      - name: Push Docker Image
+        run: docker push ${{secrets.DOCKERHUB_USERNAME}}/simplemessageapi
