@@ -17,8 +17,5 @@ jobs:
           java-version: 17
           distribution: 'temurin'
 
-      - name: Start Postgres
-        run: docker compose up -d postgres
-
       - name: Run Tests
         run: ./gradlew test
