@@ -1,5 +1,5 @@
 # Simple Message API
-[![Code license (GPL v3.0)](https://img.shields.io/badge/code%20license-GPL%20v3.0-green.svg?style=flat-square)](https://github.com/TheRealKabo/MPP/blob/master/LICENSE)
+[![Code license (GPL v3.0)](https://img.shields.io/badge/code%20license-GPL%20v3.0-green.svg?style=flat-square)](https://github.com/dm432/simplemessageapi/blob/master/LICENSE)
 
 **Please note: This project is still in very early development and many features are missing :(**
 
