@@ -5,7 +5,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Table
 
 @Table("\"user\"")
-class User (
+class User(
     @Id
     @JsonIgnore
     var id: Long? = null,

@@ -1,16 +1,20 @@
 package com.danielmaile.simplemessageapi.exception
 
 import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.ResponseStatus
 
-open class CustomException(
-    override val message: String,
-    val statusCode: HttpStatus
-) : Exception()
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+class CustomBadRequestException(
+    override val message: String
+) : Exception(message)
 
-class UsernameAlreadyTakenException : CustomException("A user with that username already exists.", HttpStatus.CONFLICT)
-
-class InvalidCredentialsException : CustomException("Invalid username or password.", HttpStatus.BAD_REQUEST)
-
+@ResponseStatus(HttpStatus.NOT_FOUND)
 class UsernameNotFoundException(
     val username: String
-) : CustomException("The user $username was not found.", HttpStatus.BAD_REQUEST)
+) : Exception("The user $username was not found.")
+
+@ResponseStatus(HttpStatus.CONFLICT)
+class UsernameAlreadyTakenException : Exception("A user with that username already exists.")
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+class InvalidCredentialsException : Exception("Invalid username or password.")

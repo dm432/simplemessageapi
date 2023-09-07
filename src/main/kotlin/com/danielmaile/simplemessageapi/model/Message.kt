@@ -7,7 +7,7 @@ import org.springframework.data.relational.core.mapping.Table
 import java.time.LocalDateTime
 
 @Table("message")
-class Message (
+class Message(
     @Id
     @JsonIgnore
     var id: Long? = null,

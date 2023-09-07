@@ -11,6 +11,7 @@ import com.ninjasquad.springmockk.SpykBean
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
+import io.mockk.coEvery
 import io.mockk.every
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -26,7 +27,6 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
-import reactor.core.publisher.Mono
 import strikt.api.expect
 import strikt.api.expectThat
 import strikt.assertions.any
@@ -115,7 +115,6 @@ class SecurityConfigTest {
             .expectBody()
             .consumeWith {
                 expect {
-
                 }
                 expectThat(it.status).isContainedIn(
                     listOf(
@@ -129,13 +128,11 @@ class SecurityConfigTest {
     @ParameterizedTest
     @ValueSource(strings = ["/api/v1/me"])
     fun `springSecurityFilterChain - authenticated endpoints are accessible with valid bearer token`(endpoint: String) {
-        every { userRepository.findUserByUsername(any()) } answers {
-            Mono.just(
-                User(
-                    username = "TestUser",
-                    password = passwordEncoder.encode("password"),
-                    roles = listOf(Role.ROLE_USER)
-                )
+        coEvery { userRepository.findUserByUsername(any()) } answers {
+            User(
+                username = "TestUser",
+                password = passwordEncoder.encode("password"),
+                roles = listOf(Role.ROLE_USER)
             )
         }
 
@@ -210,13 +207,11 @@ class SecurityConfigTest {
     @ParameterizedTest
     @ValueSource(strings = ["/api/v1/me"])
     fun `springSecurityFilterChain - authenticated endpoints are not accessible with expired bearer token`(endpoint: String) {
-        every { userRepository.findUserByUsername(any()) } answers {
-            Mono.just(
-                User(
-                    username = "TestUser",
-                    password = passwordEncoder.encode("password"),
-                    roles = listOf(Role.ROLE_USER)
-                )
+        coEvery { userRepository.findUserByUsername(any()) } answers {
+            User(
+                username = "TestUser",
+                password = passwordEncoder.encode("password"),
+                roles = listOf(Role.ROLE_USER)
             )
         }
         every { tokenProvider.createToken(any()) } answers {
@@ -269,15 +264,13 @@ class SecurityConfigTest {
 
     @Test
     fun `userDetailsService - maps correctly`() {
-        every { userRepository.findUserByUsername(any()) } answers {
-            Mono.just(
-                User(
-                    id = 123,
-                    username = firstArg(),
-                    password = "password",
-                    active = true,
-                    roles = listOf(Role.ROLE_USER, Role.ROLE_ADMIN)
-                )
+        coEvery { userRepository.findUserByUsername(any()) } answers {
+            User(
+                id = 123,
+                username = firstArg(),
+                password = "password",
+                active = true,
+                roles = listOf(Role.ROLE_USER, Role.ROLE_ADMIN)
             )
         }
 

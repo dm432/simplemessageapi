@@ -8,7 +8,7 @@ import com.danielmaile.simplemessageapi.repository.UserRepository
 import com.danielmaile.simplemessageapi.security.JWTProperties
 import com.danielmaile.simplemessageapi.security.JWTTokenProvider
 import com.ninjasquad.springmockk.MockkBean
-import io.mockk.every
+import io.mockk.coEvery
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
@@ -18,7 +18,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
-import reactor.core.publisher.Mono
 import strikt.api.expectThat
 import strikt.assertions.any
 import strikt.assertions.hasSize
@@ -61,13 +60,11 @@ class CurrentUserControllerTest {
 
     @Test
     fun `currentUser - returns the currently logged-in user`() {
-        every { userRepository.findUserByUsername(any()) } answers {
-            Mono.just(
-                User(
-                    username = "TestUser",
-                    password = passwordEncoder.encode("password"),
-                    roles = listOf(Role.ROLE_USER)
-                )
+        coEvery { userRepository.findUserByUsername(any()) } answers {
+            User(
+                username = "TestUser",
+                password = passwordEncoder.encode("password"),
+                roles = listOf(Role.ROLE_USER)
             )
         }
         val token = authenticationManager.authenticate(
@@ -87,7 +84,6 @@ class CurrentUserControllerTest {
                 it.setBearerAuth(token)
             }
             .exchange()
-
 
         response
             .expectStatus()

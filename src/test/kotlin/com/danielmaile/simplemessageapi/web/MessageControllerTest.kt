@@ -2,7 +2,6 @@ package com.danielmaile.simplemessageapi.web
 
 import com.danielmaile.simplemessageapi.config.ApplicationConfig
 import com.danielmaile.simplemessageapi.config.SecurityConfig
-import com.danielmaile.simplemessageapi.model.CustomExceptionModel
 import com.danielmaile.simplemessageapi.model.Message
 import com.danielmaile.simplemessageapi.model.Role
 import com.danielmaile.simplemessageapi.model.User
@@ -12,9 +11,12 @@ import com.danielmaile.simplemessageapi.security.JWTProperties
 import com.danielmaile.simplemessageapi.security.JWTTokenProvider
 import com.danielmaile.simplemessageapi.web.model.NewMessage
 import com.ninjasquad.springmockk.MockkBean
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockkStatic
-import io.mockk.verify
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -29,10 +31,10 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.WebTestClient.ListBodySpec
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import strikt.api.expectThat
-import strikt.assertions.*
+import strikt.assertions.isEqualTo
+import strikt.assertions.isNotNull
 import java.time.LocalDateTime
 
 typealias MessageDTO = com.danielmaile.simplemessageapi.web.model.Message
@@ -82,13 +84,8 @@ class MessageControllerTest {
         mockkStatic(LocalDateTime::class)
         every { LocalDateTime.now() } returns createdTime
 
-        every { messageRepo.save(any<Message>()) } answers {
-            println(firstArg<Message>().id)
-            println(firstArg<Message>().created)
-            println(firstArg<Message>().senderId)
-            println(firstArg<Message>().recipientId)
-            println(firstArg<Message>().message)
-            Mono.just(firstArg())
+        coEvery { messageRepo.save(any<Message>()) } answers {
+            firstArg()
         }
 
         val user1 = User(
@@ -112,44 +109,32 @@ class MessageControllerTest {
             roles = listOf(Role.ROLE_USER)
         )
 
-        every { userRepository.findUserByUsername("user1") } answers {
-            Mono.just(
-                user1
-            )
+        coEvery { userRepository.findUserByUsername("user1") } answers {
+            user1
         }
 
-        every { userRepository.findUserByUsername("user2") } answers {
-            Mono.just(
-                user2
-            )
+        coEvery { userRepository.findUserByUsername("user2") } answers {
+            user2
         }
 
-        every { userRepository.findUserByUsername("user3") } answers {
-            Mono.just(
-                user3
-            )
+        coEvery { userRepository.findUserByUsername("user3") } answers {
+            user3
         }
 
-        every { userRepository.findUserByUsername("notFound") } answers {
-            Mono.empty()
+        coEvery { userRepository.findUserByUsername("notFound") } answers {
+            null
         }
 
-        every { userRepository.findById(1) } answers {
-            Mono.just(
-                user1
-            )
+        coEvery { userRepository.findById(1) } answers {
+            user1
         }
 
-        every { userRepository.findById(2) } answers {
-            Mono.just(
-                user2
-            )
+        coEvery { userRepository.findById(2) } answers {
+            user2
         }
 
-        every { userRepository.findById(3) } answers {
-            Mono.just(
-                user3
-            )
+        coEvery { userRepository.findById(3) } answers {
+            user3
         }
 
         user1Token = authenticationManager.authenticate(
@@ -183,13 +168,13 @@ class MessageControllerTest {
             )
             .exchange()
 
-        verify(exactly = 1) {
+        coVerify(exactly = 1) {
             messageRepo.save(
                 match {
                     it.created == createdTime &&
-                            it.senderId == 1L &&
-                            it.recipientId == 2L &&
-                            it.message == "this is a test message."
+                        it.senderId == 1L &&
+                        it.recipientId == 2L &&
+                        it.message == "this is a test message."
                 }
             )
         }
@@ -238,15 +223,9 @@ class MessageControllerTest {
             )
             .exchange()
 
-
         response
             .expectStatus()
             .isBadRequest
-            .expectBody(CustomExceptionModel::class.java)
-            .consumeWith {
-                expectThat(it.responseBody)
-                    .isNotNull()
-            }
     }
 
     @Test
@@ -269,15 +248,9 @@ class MessageControllerTest {
             )
             .exchange()
 
-
         response
             .expectStatus()
-            .isBadRequest
-            .expectBody(CustomExceptionModel::class.java)
-            .consumeWith {
-                expectThat(it.responseBody)
-                    .isNotNull()
-            }
+            .isNotFound
     }
 
     @Test
@@ -300,21 +273,15 @@ class MessageControllerTest {
             )
             .exchange()
 
-
         response
             .expectStatus()
             .isBadRequest
-            .expectBody(CustomExceptionModel::class.java)
-            .consumeWith {
-                expectThat(it.responseBody)
-                    .isNotNull()
-            }
     }
 
     @Test
     fun `getMessages - returns empty list if no messages exist`() {
-        every { messageRepo.findAllByRecipientIdOrderByCreatedAsc(1) } answers {
-            Flux.empty()
+        coEvery { messageRepo.findAllByRecipientIdOrderByCreatedAsc(1) } answers {
+            emptyFlow()
         }
 
         val response = webTestClient
@@ -343,8 +310,8 @@ class MessageControllerTest {
             message = "Test Message"
         )
 
-        every { messageRepo.findAllByRecipientIdOrderByCreatedAsc(1) } answers {
-            Flux.just(message)
+        coEvery { messageRepo.findAllByRecipientIdOrderByCreatedAsc(1) } answers {
+            flowOf(message)
         }
 
         val response = webTestClient
@@ -390,12 +357,10 @@ class MessageControllerTest {
             message = "Test Message 2"
         )
 
-        every { messageRepo.findAllByRecipientIdOrderByCreatedAsc(1) } answers {
-            Flux.fromArray(
-                arrayOf(
-                    message1,
-                    message2
-                )
+        coEvery { messageRepo.findAllByRecipientIdOrderByCreatedAsc(1) } answers {
+            flowOf(
+                message1,
+                message2
             )
         }
 

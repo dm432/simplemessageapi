@@ -15,5 +15,4 @@ class SimpleMessageApiApplicationTests {
     @Test
     fun contextLoads() {
     }
-
 }

@@ -3,6 +3,7 @@ package com.danielmaile.simplemessageapi.config
 import com.danielmaile.simplemessageapi.repository.UserRepository
 import com.danielmaile.simplemessageapi.security.JWTTokenAuthenticationFilter
 import com.danielmaile.simplemessageapi.security.JWTTokenProvider
+import kotlinx.coroutines.runBlocking
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -16,6 +17,8 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository
+import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.toMono
 
 @Configuration
 @EnableWebFluxSecurity
@@ -44,17 +47,24 @@ class SecurityConfig {
     @Bean
     fun userDetailsService(users: UserRepository) =
         ReactiveUserDetailsService { username: String ->
-            users.findUserByUsername(username)
-                .map { user ->
-                    User
-                        .withUsername(user.username)
-                        .password(user.password)
-                        .authorities(user.roles)
-                        .accountExpired(!user.active)
-                        .credentialsExpired(!user.active)
-                        .disabled(!user.active)
-                        .accountLocked(!user.active)
-                        .build()
+            Mono.fromCallable {
+                runBlocking {
+                    users.findUserByUsername(username)
+                }
+            }
+                .flatMap { user ->
+                    user?.let {
+                        User
+                            .withUsername(it.username)
+                            .password(it.password)
+                            .authorities(it.roles)
+                            .accountExpired(!it.active)
+                            .credentialsExpired(!it.active)
+                            .disabled(!it.active)
+                            .accountLocked(!it.active)
+                            .build()
+                            .toMono()
+                    } ?: Mono.empty()
                 }
         }
 
