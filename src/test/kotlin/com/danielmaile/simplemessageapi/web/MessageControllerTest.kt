@@ -10,6 +10,9 @@ import com.danielmaile.simplemessageapi.repository.UserRepository
 import com.danielmaile.simplemessageapi.security.JWTProperties
 import com.danielmaile.simplemessageapi.security.JWTTokenProvider
 import com.danielmaile.simplemessageapi.web.model.NewMessage
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -30,9 +33,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.WebTestClient.ListBodySpec
 import reactor.core.publisher.Mono
 import strikt.api.expectThat
+import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotNull
 import java.time.LocalDateTime
@@ -78,6 +81,8 @@ class MessageControllerTest {
 
     private val createdTime = LocalDateTime.now()
     private lateinit var user1Token: String
+
+    private val mapper = ObjectMapper()
 
     @BeforeEach
     fun setUp() {
@@ -146,6 +151,8 @@ class MessageControllerTest {
             .map(tokenProvider::createToken)
             .block()
             .orEmpty()
+
+        mapper.registerModule(JavaTimeModule())
     }
 
     @Test
@@ -279,8 +286,9 @@ class MessageControllerTest {
     }
 
     @Test
-    fun `getMessages - returns empty list if no messages exist`() {
-        coEvery { messageRepo.findAllByRecipientIdOrderByCreatedAsc(1) } answers {
+    fun `getMessages - returns empty page if no messages exist`() {
+        coEvery { messageRepo.countAllByRecipientId(1) } answers { 1 }
+        coEvery { messageRepo.findAllByRecipientIdOrderByCreatedAsc(any(), 1) } answers {
             emptyFlow()
         }
 
@@ -295,23 +303,26 @@ class MessageControllerTest {
         response
             .expectStatus()
             .isOk
-            .expectBodyList(MessageDTO::class.java)
-            .value<ListBodySpec<MessageDTO>> {
-                expectThat(it.isEmpty())
+            .expectBody()
+            .jsonPath("$.content")
+            .value<List<MessageDTO>> {
+                val messages = mapper.convertValue<List<MessageDTO>>(it)
+                expectThat(messages).isEmpty()
             }
     }
 
     @Test
     fun `getMessages - returns single`() {
-        val message = Message(
+        val msg = Message(
             created = createdTime,
             senderId = 2,
             recipientId = 1,
             message = "Test Message"
         )
 
-        coEvery { messageRepo.findAllByRecipientIdOrderByCreatedAsc(1) } answers {
-            flowOf(message)
+        coEvery { messageRepo.countAllByRecipientId(1) } answers { 1 }
+        coEvery { messageRepo.findAllByRecipientIdOrderByCreatedAsc(any(), 1) } answers {
+            flowOf(msg)
         }
 
         val response = webTestClient
@@ -325,9 +336,11 @@ class MessageControllerTest {
         response
             .expectStatus()
             .isOk
-            .expectBodyList(MessageDTO::class.java)
-            .value<ListBodySpec<MessageDTO>> {
-                expectThat(it)
+            .expectBody()
+            .jsonPath("$.content")
+            .value<List<MessageDTO>> {
+                val messages = mapper.convertValue<List<MessageDTO>>(it)
+                expectThat(messages)
                     .isEqualTo(
                         listOf(
                             MessageDTO(
@@ -357,7 +370,8 @@ class MessageControllerTest {
             message = "Test Message 2"
         )
 
-        coEvery { messageRepo.findAllByRecipientIdOrderByCreatedAsc(1) } answers {
+        coEvery { messageRepo.countAllByRecipientId(1) } answers { 2 }
+        coEvery { messageRepo.findAllByRecipientIdOrderByCreatedAsc(any(), 1) } answers {
             flowOf(
                 message1,
                 message2
@@ -375,9 +389,11 @@ class MessageControllerTest {
         response
             .expectStatus()
             .isOk
-            .expectBodyList(MessageDTO::class.java)
-            .value<ListBodySpec<MessageDTO>> {
-                expectThat(it)
+            .expectBody()
+            .jsonPath("$.content")
+            .value<List<MessageDTO>> {
+                val messages = mapper.convertValue<List<MessageDTO>>(it)
+                expectThat(messages)
                     .isEqualTo(
                         listOf(
                             MessageDTO(
@@ -391,6 +407,60 @@ class MessageControllerTest {
                                 sender = "user3",
                                 recipient = "user1",
                                 message = "Test Message 2"
+                            )
+                        )
+                    )
+            }
+    }
+
+    @Test
+    fun `getMessages - correct pagination`() {
+        val message1 = Message(
+            created = createdTime,
+            senderId = 2,
+            recipientId = 1,
+            message = "Test Message"
+        )
+
+        coEvery { messageRepo.countAllByRecipientId(1) } answers { 5 }
+        coEvery { messageRepo.findAllByRecipientIdOrderByCreatedAsc(any(), 1) } answers {
+            flowOf(
+                message1
+            )
+        }
+
+        val response = webTestClient
+            .get()
+            .uri {
+                it
+                    .path("/api/v1/messages")
+                    .queryParam("page", "0")
+                    .queryParam("size", "1")
+                    .build()
+            }
+            .headers {
+                it.setBearerAuth(user1Token)
+            }
+            .exchange()
+
+        response
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.totalPages").isEqualTo("5")
+            .jsonPath("$.totalElements").isEqualTo("5")
+            .jsonPath("$.size").isEqualTo("1")
+            .jsonPath("$.content")
+            .value<List<MessageDTO>> {
+                val messages = mapper.convertValue<List<MessageDTO>>(it)
+                expectThat(messages)
+                    .isEqualTo(
+                        listOf(
+                            MessageDTO(
+                                created = createdTime,
+                                sender = "user2",
+                                recipient = "user1",
+                                message = "Test Message"
                             )
                         )
                     )

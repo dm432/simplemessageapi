@@ -1,10 +1,12 @@
 package com.danielmaile.simplemessageapi.web.model
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDateTime
 
-data class Message(
-    val created: LocalDateTime,
-    val sender: String,
-    val recipient: String,
-    val message: String
+data class Message @JsonCreator constructor(
+    @JsonProperty("created") val created: LocalDateTime,
+    @JsonProperty("sender") val sender: String,
+    @JsonProperty("recipient") val recipient: String,
+    @JsonProperty("message") val message: String
 )

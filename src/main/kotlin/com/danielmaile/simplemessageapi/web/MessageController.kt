@@ -8,9 +8,13 @@ import com.danielmaile.simplemessageapi.repository.UserRepository
 import com.danielmaile.simplemessageapi.web.model.NewMessage
 import kotlinx.coroutines.flow.toList
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDateTime
 
@@ -67,15 +71,25 @@ class MessageController : MessageAPI {
     }
 
     override suspend fun getMessages(
-        @AuthenticationPrincipal principal: UserDetails
-    ): List<MessageDTO> {
+        @AuthenticationPrincipal principal: UserDetails,
+        @RequestParam(defaultValue = "0", required = false, value = "page") page: Int,
+        @RequestParam(defaultValue = "10", required = false, value = "size") size: Int
+    ): Page<MessageDTO> {
+        if (page < 0) {
+            throw CustomBadRequestException("Page index must not be less than zero.")
+        }
+        if (size < 1) {
+            throw CustomBadRequestException("Page size must not be less than one.")
+        }
+        val pageRequest = PageRequest.of(page, size)
+
         val currentUserId = userRepo
             .findUserByUsername(principal.username)
             ?.id
             ?: throw CustomBadRequestException("The current user was not found. Please try to log in again.")
 
-        return messageRepo
-            .findAllByRecipientIdOrderByCreatedAsc(currentUserId)
+        val messages = messageRepo
+            .findAllByRecipientIdOrderByCreatedAsc(pageRequest, currentUserId)
             .toList()
             .map { message ->
                 val sender = userRepo
@@ -88,5 +102,7 @@ class MessageController : MessageAPI {
                     message = message.message
                 )
             }
+
+        return PageImpl(messages, pageRequest, messageRepo.countAllByRecipientId(currentUserId))
     }
 }

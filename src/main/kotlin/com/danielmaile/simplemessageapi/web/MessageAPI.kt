@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.data.domain.Page
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 
 @RequestMapping("api/v1")
@@ -104,6 +106,8 @@ interface MessageAPI {
     @GetMapping("/messages")
     @ResponseStatus(HttpStatus.OK)
     suspend fun getMessages(
-        @AuthenticationPrincipal principal: UserDetails
-    ): List<MessageDTO>
+        @AuthenticationPrincipal principal: UserDetails,
+        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
+        @RequestParam(required = false, value = "size", defaultValue = "0") size: Int
+    ): Page<MessageDTO>
 }
