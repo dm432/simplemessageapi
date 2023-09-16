@@ -2,7 +2,16 @@
 [![Code license (GPL v3.0)](https://img.shields.io/badge/code%20license-GPL%20v3.0-green.svg?style=flat-square)](https://github.com/dm432/simplemessageapi/blob/master/LICENSE)
 
 This is a simple reactive api that can be used as a backend for a messenger. The api is build using SpringBoot WebFlux
-and a Postgres database. For authentication bearer JWTs are used. The whole project can be run inside a Kubernetes cluster. See below for more information.
+and a Postgres database. For authentication bearer JWTs are used. The whole project can be run inside a Kubernetes cluster.
+
+If you want to build a messenger or something similar, feel free to clone this repo and change anything you like. 🧑🏻‍🔬
+
+## ✨ Features
+- Bearer Token Authentication 🔒
+- Paginated API Responses 📄
+- Can be run inside a Kuberneter Cluster (see below) 🖥️
+- Uses Spring WebFlux and Kotlin Coroutines for the best performance 🚀
+- Unit Tests for almost everything (Coverage > 90%) ✅
 
 ## 🔨 Start the application 
 
