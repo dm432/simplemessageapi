@@ -2,6 +2,7 @@ package com.danielmaile.simplemessageapi.web
 
 import com.danielmaile.simplemessageapi.web.model.NewMessage
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.ExampleObject
@@ -74,6 +75,31 @@ interface MessageAPI {
     @Operation(
         summary = "Get all messages sent to the currently logged-in user.",
         description = "Gets all messages sent to the currently logged-in user ordered from oldest to newest.",
+        parameters = [
+            Parameter(
+                name = "page",
+                required = false,
+                schema = Schema(
+                    defaultValue = "0"
+                )
+            ),
+            Parameter(
+                name = "size",
+                required = false,
+                schema = Schema(
+                    defaultValue = "10"
+                )
+            ),
+            Parameter(
+                name = "unreadOnly",
+                description = "If set to true only unread messages will be returned.",
+                required = false,
+                schema = Schema(
+                    type = "boolean",
+                    defaultValue = "false"
+                )
+            )
+        ],
         responses = [
             ApiResponse(
                 responseCode = "200",
@@ -82,7 +108,7 @@ interface MessageAPI {
                     Content(
                         array = ArraySchema(
                             schema = Schema(
-                                implementation = MessageDTO::class
+                                implementation = Page::class
                             )
                         )
                     )
@@ -108,6 +134,45 @@ interface MessageAPI {
     suspend fun getMessages(
         @AuthenticationPrincipal principal: UserDetails,
         @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
-        @RequestParam(required = false, value = "size", defaultValue = "0") size: Int
+        @RequestParam(required = false, value = "size", defaultValue = "10") size: Int,
+        @RequestParam(required = false, value = "unreadOnly", defaultValue = "false") unreadOnly: Boolean
     ): Page<MessageDTO>
+
+    @Operation(
+        summary = "Read all messages.",
+        description = "Sets the read flag of all messages received from the currently logged-in user to true.",
+        responses = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Successfully read all messages.",
+                content = [
+                    Content(
+                        examples = [
+                            ExampleObject(
+                                value = ""
+                            )
+                        ]
+                    )
+                ]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized",
+                content = [
+                    Content(
+                        examples = [
+                            ExampleObject(
+                                value = ""
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
+    )
+    @PostMapping("/messages/read-all")
+    @ResponseStatus(HttpStatus.OK)
+    suspend fun readAllMessages(
+        @AuthenticationPrincipal principal: UserDetails
+    )
 }

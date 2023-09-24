@@ -14,9 +14,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.ninjasquad.springmockk.MockkBean
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockkStatic
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -317,7 +319,8 @@ class MessageControllerTest {
             created = createdTime,
             senderId = 2,
             recipientId = 1,
-            message = "Test Message"
+            message = "Test Message",
+            read = false
         )
 
         coEvery { messageRepo.countAllByRecipientId(1) } answers { 1 }
@@ -347,7 +350,8 @@ class MessageControllerTest {
                                 created = createdTime,
                                 sender = "user2",
                                 recipient = "user1",
-                                message = "Test Message"
+                                message = "Test Message",
+                                read = false
                             )
                         )
                     )
@@ -360,14 +364,16 @@ class MessageControllerTest {
             created = createdTime,
             senderId = 2,
             recipientId = 1,
-            message = "Test Message"
+            message = "Test Message",
+            read = false
         )
 
         val message2 = Message(
             created = createdTime,
             senderId = 3,
             recipientId = 1,
-            message = "Test Message 2"
+            message = "Test Message 2",
+            read = false
         )
 
         coEvery { messageRepo.countAllByRecipientId(1) } answers { 2 }
@@ -400,13 +406,15 @@ class MessageControllerTest {
                                 created = createdTime,
                                 sender = "user2",
                                 recipient = "user1",
-                                message = "Test Message"
+                                message = "Test Message",
+                                read = false
                             ),
                             MessageDTO(
                                 created = createdTime,
                                 sender = "user3",
                                 recipient = "user1",
-                                message = "Test Message 2"
+                                message = "Test Message 2",
+                                read = false
                             )
                         )
                     )
@@ -419,7 +427,8 @@ class MessageControllerTest {
             created = createdTime,
             senderId = 2,
             recipientId = 1,
-            message = "Test Message"
+            message = "Test Message",
+            read = false
         )
 
         coEvery { messageRepo.countAllByRecipientId(1) } answers { 5 }
@@ -460,10 +469,129 @@ class MessageControllerTest {
                                 created = createdTime,
                                 sender = "user2",
                                 recipient = "user1",
-                                message = "Test Message"
+                                message = "Test Message",
+                                read = false
                             )
                         )
                     )
             }
+    }
+
+    @Test
+    fun `getMessages - filters for unread messages`() {
+        val message1 = Message(
+            created = createdTime,
+            senderId = 2,
+            recipientId = 1,
+            message = "Test Message",
+            read = true
+        )
+
+        coEvery { messageRepo.countAllByRecipientIdAndRead(1, false) } answers { 3 }
+        coEvery { messageRepo.findAllByRecipientIdAndReadOrderByCreatedAsc(any(), 1, any()) } answers {
+            flowOf(
+                message1
+            )
+        }
+
+        val response = webTestClient
+            .get()
+            .uri {
+                it
+                    .path("/api/v1/messages")
+                    .queryParam("page", "0")
+                    .queryParam("size", "1")
+                    .queryParam("unreadOnly", "true")
+                    .build()
+            }
+            .headers {
+                it.setBearerAuth(user1Token)
+            }
+            .exchange()
+
+        response
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.totalPages").isEqualTo("3")
+            .jsonPath("$.totalElements").isEqualTo("3")
+            .jsonPath("$.size").isEqualTo("1")
+            .jsonPath("$.content")
+            .value<List<MessageDTO>> {
+                val messages = mapper.convertValue<List<MessageDTO>>(it)
+                expectThat(messages)
+                    .isEqualTo(
+                        listOf(
+                            MessageDTO(
+                                created = createdTime,
+                                sender = "user2",
+                                recipient = "user1",
+                                message = "Test Message",
+                                read = true
+                            )
+                        )
+                    )
+            }
+    }
+
+    @Test
+    fun `getMessages - returns HTTP 400 if page is less than 0`() {
+        webTestClient
+            .get()
+            .uri {
+                it
+                    .path("/api/v1/messages")
+                    .queryParam("page", "-1")
+                    .queryParam("size", "1")
+                    .build()
+            }
+            .headers {
+                it.setBearerAuth(user1Token)
+            }
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+    }
+
+    @Test
+    fun `getMessages - returns HTTP 400 if size is less than 1`() {
+        webTestClient
+            .get()
+            .uri {
+                it
+                    .path("/api/v1/messages")
+                    .queryParam("page", "0")
+                    .queryParam("size", "0")
+                    .build()
+            }
+            .headers {
+                it.setBearerAuth(user1Token)
+            }
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+    }
+
+    @Test
+    fun `readAllMessages - sets all messages to read = true`() {
+        coEvery { messageRepo.readAllMessages(any()) } just Runs
+
+        webTestClient
+            .post()
+            .uri {
+                it
+                    .path("/api/v1/messages/read-all")
+                    .build()
+            }
+            .headers {
+                it.setBearerAuth(user1Token)
+            }
+            .exchange()
+            .expectStatus()
+            .isOk
+
+        coVerify(exactly = 1) {
+            messageRepo.readAllMessages(1)
+        }
     }
 }

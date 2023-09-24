@@ -16,5 +16,6 @@ class Message(
     val senderId: Long,
     @Column("recipient")
     val recipientId: Long,
+    val read: Boolean,
     val message: String
 )

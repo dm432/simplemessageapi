@@ -58,7 +58,8 @@ class MessageController : MessageAPI {
                 created = LocalDateTime.now(),
                 senderId = senderId,
                 recipientId = recipientId,
-                message = message.message
+                message = message.message,
+                read = false
             )
         )
 
@@ -66,14 +67,16 @@ class MessageController : MessageAPI {
             created = msg.created,
             sender = principal.username,
             recipient = recipient.username,
-            message = message.message
+            message = message.message,
+            read = msg.read
         )
     }
 
     override suspend fun getMessages(
         @AuthenticationPrincipal principal: UserDetails,
-        @RequestParam(defaultValue = "0", required = false, value = "page") page: Int,
-        @RequestParam(defaultValue = "10", required = false, value = "size") size: Int
+        @RequestParam(defaultValue = "0", required = true, value = "page") page: Int,
+        @RequestParam(defaultValue = "10", required = true, value = "size") size: Int,
+        @RequestParam(defaultValue = "false", required = true, value = "unreadOnly") unreadOnly: Boolean
     ): Page<MessageDTO> {
         if (page < 0) {
             throw CustomBadRequestException("Page index must not be less than zero.")
@@ -88,21 +91,42 @@ class MessageController : MessageAPI {
             ?.id
             ?: throw CustomBadRequestException("The current user was not found. Please try to log in again.")
 
-        val messages = messageRepo
-            .findAllByRecipientIdOrderByCreatedAsc(pageRequest, currentUserId)
-            .toList()
-            .map { message ->
-                val sender = userRepo
-                    .findById(message.senderId)
+        val messages =
+            if (unreadOnly) {
+                messageRepo.findAllByRecipientIdAndReadOrderByCreatedAsc(pageRequest, currentUserId, false)
+            } else {
+                messageRepo.findAllByRecipientIdOrderByCreatedAsc(pageRequest, currentUserId)
+            }
+                .toList()
+                .map { message ->
+                    val sender = userRepo
+                        .findById(message.senderId)
 
-                MessageDTO(
-                    created = message.created,
-                    sender = sender?.username ?: "",
-                    recipient = principal.username,
-                    message = message.message
-                )
+                    MessageDTO(
+                        created = message.created,
+                        sender = sender?.username ?: "",
+                        recipient = principal.username,
+                        message = message.message,
+                        read = message.read
+                    )
+                }
+
+        val messageCount =
+            if (unreadOnly) {
+                messageRepo.countAllByRecipientIdAndRead(currentUserId, false)
+            } else {
+                messageRepo.countAllByRecipientId(currentUserId)
             }
 
-        return PageImpl(messages, pageRequest, messageRepo.countAllByRecipientId(currentUserId))
+        return PageImpl(messages, pageRequest, messageCount)
+    }
+
+    override suspend fun readAllMessages(principal: UserDetails) {
+        val currentUserId = userRepo
+            .findUserByUsername(principal.username)
+            ?.id
+            ?: throw CustomBadRequestException("The current user was not found. Please try to log in again.")
+
+        messageRepo.readAllMessages(currentUserId)
     }
 }

@@ -8,5 +8,6 @@ data class Message @JsonCreator constructor(
     @JsonProperty("created") val created: LocalDateTime,
     @JsonProperty("sender") val sender: String,
     @JsonProperty("recipient") val recipient: String,
+    @JsonProperty("read") val read: Boolean,
     @JsonProperty("message") val message: String
 )
